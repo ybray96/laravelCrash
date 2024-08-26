@@ -33,5 +33,15 @@
             {{--Submit Button--}}
             <button class="btn">Create</button>
         </form>
-
+          
+    </div>
+    <h1 class="font-bold mb-4">Lataest post</h1> 
+    <div class="grid grid-cols-2 gap-6">
+        @foreach ($posts as $post)
+           <x-postCard :post="$post"/>
+        @endforeach
+     </div>
+     <div>
+        {{$posts->links()}}
+     </div>
 </x-layout>
