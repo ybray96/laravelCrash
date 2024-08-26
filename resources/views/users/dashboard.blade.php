@@ -4,10 +4,11 @@
     {{--Create Post form--}}
     <div class="card mb-4">
         <h2 class="font-bold mb-4">Create a new post</h2>
+        
         {{--Sesscion Messages--}}
         @if (session('success'))
-            <div>
-                <p>{{session('success')}}</p>
+            <div class="mb-2">
+                <x-flashMsg msg="{{session('success')}}" bg="bg-yellow-500"/>
             </div>
         @endif
         <form action="{{route('posts.store')}}" method="post">
