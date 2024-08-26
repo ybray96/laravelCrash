@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,7 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::view('/','posts.index')->name('home');
+Route::redirect('/','posts');
+
+Route::resource('posts', PostController::class);
 
 Route::middleware('auth')->group(function(){
 
