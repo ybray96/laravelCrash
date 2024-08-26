@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Models\Post;
-use App\Http\Requests\StorePostRequest;
-use App\Http\Requests\UpdatePostRequest;
+
 
 class PostController extends Controller
 {
@@ -36,9 +37,17 @@ class PostController extends Controller
      * @param  \App\Http\Requests\StorePostRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StorePostRequest $request)
+    public function store(Request $request)
     {
-        //
+        
+        //Validate
+        $fields=$request->validate([
+            'title'=>['required','max:255'],
+            'body'=>['required']
+        ]);
+        //Crete a post
+        Auth::user()->posts()->create($fields);
+        return back()->with('success','Your post was created');
     }
 
     /**
