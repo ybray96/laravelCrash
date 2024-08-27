@@ -20,7 +20,7 @@ class AuthController extends Controller
        ]);
        //Register
 
-       $fields['password'] = Hash::make($fields['password']);
+        $fields['password'] = Hash::make($fields['password']);
 
        $user=User::create($fields);
 

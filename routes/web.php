@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/','posts');
 
 Route::resource('posts', PostController::class);
+Route::get('/{user}/posts',[DashboardController::class, 'userPosts'])->name('posts.user');
 
 Route::middleware('auth')->group(function(){
 
