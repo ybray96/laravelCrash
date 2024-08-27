@@ -1,19 +1,23 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use App\Events\UserSubscribed;
+use App\Mail\WelcomeMail;
 use App\Models\Post;
-
+use Illuminate\Contracts\Cache\Store;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    public function __construct()
+    {
+        // Применить промежуточное ПО 'auth' ко всем методам, кроме 'index' и 'show'
+        $this->middleware('auth', ['except' => ['index', 'show']]);
+    }
+
     public function index()
     {
         $posts=Post::latest()->paginate(6);
@@ -21,22 +25,11 @@ class PostController extends Controller
         return view('posts.index', ['posts'=>$posts]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\StorePostRequest  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         
@@ -50,37 +43,22 @@ class PostController extends Controller
         return back()->with('success','Your post was created');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
     public function show(Post $post)
     {
         return view('posts.show', ['post'=>$post]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
     public function edit(Post $post)
     {
+        Gate::authorize('modify',$post);
         return view('posts.edit', ['post'=>$post]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdatePostRequest  $request
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Post $post)
     {
+        //Authorizing the action
+        Gate::authorize('modify',$post);
+
         //Validate
         $fields=$request->validate([
             'title'=>['required','max:255'],
@@ -92,14 +70,11 @@ class PostController extends Controller
         return redirect()->route('dashboard')->with('success','Your post was updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Post $post)
     {
+        //Authorizing the action
+        Gate::authorize('modify',$post);
+
         //Delete the post
         $post->delete();
 
