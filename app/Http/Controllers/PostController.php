@@ -8,6 +8,8 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 
 class PostController extends Controller
 {
@@ -19,6 +21,7 @@ class PostController extends Controller
 
     public function index()
     {
+        
         $posts=Post::latest()->paginate(6);
 
         return view('posts.index', ['posts'=>$posts]);
@@ -48,11 +51,15 @@ class PostController extends Controller
         
 
         //Crete a post
-        Auth::user()->posts()->create([
+        $post=Auth::user()->posts()->create([
             'title'=>$request->title,
             'body'=>$request->body,
             'image'=>$path,
         ]);
+
+        //Send mail
+        Mail::to(Auth::user())->send(new WelcomeMail(Auth::user(),$post));
+
         return back()->with('success','Your post was created');
     }
 
