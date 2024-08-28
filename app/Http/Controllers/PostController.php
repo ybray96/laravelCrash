@@ -8,6 +8,8 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 
 class PostController extends Controller
 {
@@ -19,6 +21,7 @@ class PostController extends Controller
 
     public function index()
     {
+        
         $posts=Post::latest()->paginate(6);
 
         return view('posts.index', ['posts'=>$posts]);
@@ -31,16 +34,32 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
-        Storage::put('posts_images',$request->image);
-        dd('ok');
+        
 
         //Validate
-        $fields=$request->validate([
+        $request->validate([
             'title'=>['required','max:255'],
-            'body'=>['required']
+            'body'=>['required'],
+            'image'=>['nullable','file','max:3000','mimes:png,jpg,webp']
         ]);
+
+        //Store image if exists
+        $path=null;
+        if($request->hasFile('image')){
+            $path=Storage::disk('public')->put('posts_images',$request->image);
+        }
+        
+
         //Crete a post
-        Auth::user()->posts()->create($fields);
+        $post=Auth::user()->posts()->create([
+            'title'=>$request->title,
+            'body'=>$request->body,
+            'image'=>$path,
+        ]);
+
+        //Send mail
+        Mail::to(Auth::user())->send(new WelcomeMail(Auth::user(),$post));
+
         return back()->with('success','Your post was created');
     }
 
@@ -61,12 +80,27 @@ class PostController extends Controller
         Gate::authorize('modify',$post);
 
         //Validate
-        $fields=$request->validate([
+        $request->validate([
             'title'=>['required','max:255'],
-            'body'=>['required']
+            'body'=>['required'],
+            'image'=>['nullable','file','max:3000','mimes:png,jpg,webp']
         ]);
+        //Store image if exists
+        $path=$post->image ?? null;
+        if($request->hasFile('image')){
+            if($post->image)
+            {
+                Storage::disk('public')->delete($post->image);
+            }
+            $path=Storage::disk('public')->put('posts_images',$request->image);
+        }
+
         //Update a post
-        $post->update($fields);
+        $post->update([
+            'title'=>$request->title,
+            'body'=>$request->body,
+            'image'=>$path
+        ]);
 
         return redirect()->route('dashboard')->with('success','Your post was updated');
     }
@@ -75,6 +109,12 @@ class PostController extends Controller
     {
         //Authorizing the action
         Gate::authorize('modify',$post);
+
+        //Delete post image if exists
+        if($post->image)
+        {
+            Storage::disk('public')->delete($post->image);
+        }
 
         //Delete the post
         $post->delete();
