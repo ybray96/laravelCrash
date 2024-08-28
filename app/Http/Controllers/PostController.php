@@ -1,14 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Events\UserSubscribed;
-use App\Mail\WelcomeMail;
+
 use App\Models\Post;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -33,13 +32,27 @@ class PostController extends Controller
     public function store(Request $request)
     {
         
+
         //Validate
-        $fields=$request->validate([
+        $request->validate([
             'title'=>['required','max:255'],
-            'body'=>['required']
+            'body'=>['required'],
+            'image'=>['nullable','file','max:3000','mimes:png,jpg,webp']
         ]);
+
+        //Store image if exists
+        $path=null;
+        if($request->hasFile('image')){
+            $path=Storage::disk('public')->put('posts_images',$request->image);
+        }
+        
+
         //Crete a post
-        Auth::user()->posts()->create($fields);
+        Auth::user()->posts()->create([
+            'title'=>$request->title,
+            'body'=>$request->body,
+            'image'=>$path,
+        ]);
         return back()->with('success','Your post was created');
     }
 
