@@ -1,7 +1,7 @@
 @props(['post','full'=>false])
 <div class="card">
    {{--Cover photo--}}
-   <div>
+   <div class="h-52 rounded-mb mb-4 w-full object-cover overflow-hidden">
       @if ($post->image)
          <img src="{{asset('storage/'.$post->image)}}" alt="">
       @else
